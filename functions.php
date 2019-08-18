@@ -173,6 +173,13 @@ function meal_one_page_scripts() {
 
 	wp_enqueue_script( 'meal-one-page-main-js', get_template_directory_uri() . '/js/main.js', array(), '20151215', true );
 
+	// LOad Reservation 
+	wp_enqueue_script( 'meal-one-page-reservation-js', get_template_directory_uri() . '/js/reservation.js', array('meal-one-page-jquery'), '20151215', true );
+ // Getting Ajax URL
+    $ajaxurl = admin_url('admin-ajax.php');
+
+ //Localize Script for pass Ajax URL
+ wp_localize_script( "meal-one-page-reservation-js","mealurl",array("ajaxurl" => $ajaxurl));
 
 	wp_enqueue_script( 'meal-one-page-skip-link-focus-fix', get_template_directory_uri() . '/js/skip-link-focus-fix.js', array(), '20151215', true );
 
@@ -209,5 +216,298 @@ if ( defined( 'JETPACK__VERSION' ) ) {
 	require get_template_directory() . '/inc/jetpack.php';
 }
 
+// Meal Reservation 
+
+function meal_process_reservation() {
+
+	if ( check_ajax_referer( 'reservation', 'rn' ) ) {
+		$name    = sanitize_text_field( $_POST['name'] );
+		$email   = sanitize_text_field( $_POST['email'] );
+		$persons = sanitize_text_field( $_POST['persons'] );
+		$phone   = sanitize_text_field( $_POST['phone'] );
+		$date    = sanitize_text_field( $_POST['date'] );
+		$time    = sanitize_text_field( $_POST['time'] );
+
+		$data = array(
+			'name'    => $name,
+			'email'   => $email,
+			'phone'   => $phone,
+			'persons' => $persons,
+			'date'    => $date,
+			'time'    => $time
+		);
+		//print_r( $data );
+
+		$reservation_arguments = array(
+			'post_type'   => 'reservation',
+			'post_author' => 1,
+			'post_date'   => date( 'Y-m-d H:i:s' ),
+			'post_status' => 'publish',
+			'post_title'  => sprintf( '%s - Reservation for %s persons on %s - %s', $name, $persons, $date . " : " . $time, $email ),
+			'meta_input'  => $data
+		);
+
+		$reservations = new WP_Query( array(
+			'post_type'   => 'reservation',
+			'post_status' => 'publish',
+			'meta_query'  => array(
+				'relation'    => 'AND',
+				'email_check' => array(
+					'key'   => 'email',
+					'value' => $email
+				),
+				'date_check'  => array(
+					'key'   => 'date',
+					'value' => $date
+				),
+				'time_check'  => array(
+					'key'   => 'time',
+					'value' => $time
+				),
+			)
+		) );
+		if ( $reservations->found_posts > 0 ) {
+			echo 'Duplicate';
+		} else {
+			$wp_error = '';
+			wp_insert_post( $reservation_arguments, $wp_error );
+			if ( ! $wp_error ) {
+				echo "Successful";
+			}
+		}
+
+	} else {
+		echo 'Not allowed';
+	}
+	die();
+}
+
+add_action( 'wp_ajax_reservation', 'meal_process_reservation' );
+add_action( 'wp_ajax_nopriv_reservation', 'meal_process_reservation' );
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Control core classes for avoid errors
+if( class_exists( 'CSF' ) ) {
+
+	//
+	// Set a unique slug-like ID
+	$prefix = 'my_framework';
+  
+	//
+	// Create options
+	CSF::createOptions( $prefix, array(
+	  'menu_title' => 'My Framework',
+	  'menu_slug'  => 'my-framework',
+	) );
+  
+	//
+	// Create a section
+	CSF::createSection( $prefix, array(
+	  'title'  => 'Tab Title 1',
+	  'fields' => array(
+  
+		//
+		// A text field
+		array(
+		  'id'    => 'opt-text',
+		  'type'  => 'text',
+		  'title' => 'Simple Text',
+		),
+		array(
+			'id'    => 'opt-wp-editor-1',
+			'type'  => 'wp_editor',
+			'title' => 'WP Editor',
+		  ),
+		  array(
+			'id'    => 'opt-typography-1',
+			'type'  => 'typography',
+			'title' => 'Typography',
+		  ),
+		  array(
+			'id'            => 'opt-tabbed-1',
+			'type'          => 'tabbed',
+			'title'         => 'Tabbed',
+			'tabs'          => array(
+			  array(
+				'title'     => 'Tab 1',
+				'icon'      => 'fa fa-heart',
+				'fields'    => array(
+				  array(
+					'id'    => 'opt-text-1',
+					'type'  => 'text',
+					'title' => 'Text',
+				  ),
+				)
+			  ),
+			  array(
+				'title'     => 'Tab 2',
+				'icon'      => 'fa fa-gear',
+				'fields'    => array(
+				  array(
+					'id'    => 'opt-color-1',
+					'type'  => 'color',
+					'title' => 'Color',
+				  ),
+				)
+			  ),
+			)
+		  ),
+		  array(
+			'id'            => 'opt-tabbed-2',
+			'type'          => 'tabbed',
+			'title'         => 'Tabbed',
+			'tabs'          => array(
+			  array(
+				'title'     => 'Tab 1',
+				'icon'      => 'fa fa-heart',
+				'fields'    => array(
+				  array(
+					'id'    => 'opt-text-1',
+					'type'  => 'text',
+					'title' => 'Text 1',
+				  ),
+				  array(
+					'id'    => 'opt-text-2',
+					'type'  => 'text',
+					'title' => 'Text 2',
+				  ),
+				)
+			  ),
+			  array(
+				'title'     => 'Tab 2',
+				'icon'      => 'fa fa-star',
+				'fields'    => array(
+				  array(
+					'id'    => 'opt-color-1',
+					'type'  => 'color',
+					'title' => 'Color 1',
+				  ),
+				  array(
+					'id'    => 'opt-color-2',
+					'type'  => 'color',
+					'title' => 'Color 2',
+				  ),
+				)
+			  ),
+			),
+			'default'       => array(
+			  'opt-text-1'  => 'This is text 1 value',
+			  'opt-text-2'  => 'This is text 2 value',
+			  'opt-color-1' => '#555',
+			  'opt-color-2' => '#999',
+			)
+		  ),
+		  array(
+			'id'        => 'opt-sportable-1',
+			'type'      => 'sortable',
+			'title'     => 'Sortable',
+			'fields'    => array(
+		  
+			  array(
+				'id'    => 'text-1',
+				'type'  => 'text',
+				'title' => 'Text 1'
+			  ),
+		  
+			  array(
+				'id'    => 'text-2',
+				'type'  => 'text',
+				'title' => 'Text 2'
+			  ),
+		  
+			),
+		  ),
+		  array(
+			'id'    => 'opt-slider-1',
+			'type'  => 'slider',
+			'title' => 'Slider',
+		  ),
+		  array(
+			'id'          => 'opt-select-1',
+			'type'        => 'select',
+			'title'       => 'Select',
+			'placeholder' => 'Select an option',
+			'options'     => array(
+			  'option-1'  => 'Option 1',
+			  'option-2'  => 'Option 2',
+			  'option-3'  => 'Option 3',
+			),
+			'default'     => 'option-2'
+		  ),
+		  array(
+			'id'     => 'opt-repeater-1',
+			'type'   => 'repeater',
+			'title'  => 'Repeater',
+			'fields' => array(
+		  
+			  array(
+				'id'    => 'opt-text',
+				'type'  => 'text',
+				'title' => 'Text'
+			  ),
+		  
+			),
+		  ),
+	  )
+	) );
+  
+	//
+	// Create a section
+	CSF::createSection( $prefix, array(
+	  'title'  => 'Tab Title 2',
+	  'fields' => array(
+  
+		// A textarea field
+		array(
+		  'id'    => 'opt-textarea',
+		  'type'  => 'textarea',
+		  'title' => 'Simple Textarea',
+		),
+  
+	  )
+	) );
+  
+  }
